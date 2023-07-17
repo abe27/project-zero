@@ -11,6 +11,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/requestid"
+	"github.com/gofiber/fiber/v2/middleware/session"
 	"github.com/joho/godotenv"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -42,7 +43,11 @@ func init() {
 		panic("failed to connect database")
 	}
 
+	// Seed database
 	configs.SeedDB()
+
+	// Create Session Store
+	configs.Session = session.New()
 }
 
 func main() {

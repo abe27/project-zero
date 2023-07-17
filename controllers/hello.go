@@ -8,5 +8,6 @@ import (
 func HelloController(c *fiber.Ctx) error {
 	var r models.Response
 	r.Success = true
+	r.Message = "Hello World"
 	return c.Status(fiber.StatusOK).JSON(&r)
 }
