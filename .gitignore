@@ -66,3 +66,4 @@ go.work
 tmp/
 .env
 *.db
+go.sum
