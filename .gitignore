@@ -67,3 +67,4 @@ tmp/
 .env
 *.db
 go.sum
+*.log
