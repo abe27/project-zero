@@ -22,7 +22,7 @@ func ProfileController(c *fiber.Ctx) error {
 
 	id, er := services.ValidateToken(token)
 	if er != nil {
-		r.Message = "Token is Expired"
+		r.Message = er.Error()
 		CreateLogger("ร้องขอดูข้อมูลส่วนบุคคล", r.Message)
 		return c.Status(fiber.StatusUnauthorized).JSON(&r)
 	}
@@ -71,7 +71,6 @@ func RegisterController(c *fiber.Ctx) error {
 }
 
 func LoginController(c *fiber.Ctx) error {
-	store := configs.Session
 	var r models.Response
 	var user models.UserLoginForm
 	if err := c.BodyParser(&user); err != nil {
@@ -97,28 +96,16 @@ func LoginController(c *fiber.Ctx) error {
 	}
 
 	// Create Token
-	auth := services.CreateToken(userData)
+	auth, _ := services.CreateToken(userData)
 	r.Message = "Auth success!"
 	r.Data = &auth
 	// Create Logger
 	CreateLogger("เข้าสู่ระบบ", fmt.Sprintf("%s เข้าสู่ระบบเรียบร้อย", user.Email))
-
-	// Create Store Session
-	sess, err := store.Get(c)
-	if err != nil {
-		panic(err)
-	}
-
-	sess.Set("uid", c.Query("uid", auth.User.ID))
-	if err := sess.Save(); err != nil {
-		panic(err)
-	}
 	return c.Status(fiber.StatusOK).JSON(&r)
 }
 
 func LogOutController(c *fiber.Ctx) error {
 	var r models.Response
-	store := configs.Session
 	s := c.Get("Authorization")
 	token := strings.TrimPrefix(s, "Bearer ")
 	if token == "" {
@@ -129,28 +116,17 @@ func LogOutController(c *fiber.Ctx) error {
 
 	id, er := services.ValidateToken(token)
 	if er != nil {
-		r.Message = "Token is Expired"
+		r.Message = er.Error()
 		CreateLogger("ออกจากระบบ", r.Message)
 		return c.Status(fiber.StatusUnauthorized).JSON(&r)
 	}
 
 	uid := fmt.Sprintf("%s", id)
-	sess, err := store.Get(c)
-	if err != nil {
-		panic(err)
-	}
-
-	fmt.Println(sess.Get("uid"))
-	r.Data = sess
-
-	// sess.Delete(uid)
-
-	// // Destry session
-	// if err := sess.Destroy(); err != nil {
-	// 	panic(err)
-	// }
-
+	// Destry session
+	configs.Store.Delete(&models.UserLogin{}, &models.UserLogin{UserID: uid})
 	// Create Logger
+	r.Success = true
+	r.Message = "Logout success!"
 	CreateLogger("ออกจากระบบ", fmt.Sprintf("%s ออกจากระบบเรียบร้อย", uid))
 	return c.Status(fiber.StatusOK).JSON(&r)
 }
